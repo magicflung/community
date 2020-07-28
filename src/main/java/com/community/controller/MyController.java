@@ -5,6 +5,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
  * @Email: chaste86@163.com
  */
 @Controller
+@RequestMapping("/alpha")
 public class MyController {
 
     @RequestMapping(path = "/test1", method = RequestMethod.GET)
@@ -111,5 +114,36 @@ public class MyController {
         list.add(map);
 
         return list;
+    }
+
+    /*----------cookie------------*/
+
+    /**
+     * 为什么只能传字符串，因为总是来回传，如果数据太大，传输需要时间，影响性能
+     * @param response
+     * @return
+     */
+    @GetMapping("/setcookie")
+    @ResponseBody
+    public String setCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("code2", "1234567");
+        // 设置会产生该cookie的路径
+        cookie.setPath("community/alpha/");
+        // 设置cookie的生命周期
+        cookie.setMaxAge(60 * 10);
+        response.addCookie(cookie);
+        return "set cookie";
+    }
+
+    /**
+     * 使用HttpServletRequest可以获取cookie，但是获取的是数组，
+     * 还可以使用别的：@CookieValue()，只获取一个
+     * @return
+     */
+    @GetMapping("/getcookie")
+    @ResponseBody
+    public String getCookie(@CookieValue("code2") String code) {
+        System.out.println(code);
+        return "get cookie";
     }
 }

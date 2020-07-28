@@ -33,7 +33,7 @@ public class HomeController {
      * @param model 前后端传递数据
      * @return 返回到index.html
      */
-    @GetMapping("/index")
+    @GetMapping({"/index", "/"})
     public String getIndexPage(Model model, Page page) {
         // 方法调用前，SpringMvc会自动实例化Model和Page，并将Page注入到Model
         // 所以，在thymeleaf可以直接访问Page对象中的数据

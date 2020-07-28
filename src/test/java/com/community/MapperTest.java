@@ -1,8 +1,10 @@
 package com.community;
 
 import com.community.dao.DiscussPostMapper;
+import com.community.dao.LoginTicketMapper;
 import com.community.dao.UserMapper;
 import com.community.entity.DiscussPost;
+import com.community.entity.LoginTicket;
 import com.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +29,19 @@ public class MapperTest {
     @Autowired
     private DiscussPostMapper discussPostMapper;
 
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
+
+    /*----------------------------UserMapper---------------------------------------*/
     @Test
     public void testSelectUser() {
-        User user = userMapper.selectById(11);
+        User user = userMapper.selectUserById(11);
         System.out.println(user);
 
-        User liubei = userMapper.selectByName("liubei");
+        User liubei = userMapper.selectUserByName("liubei");
         System.out.println(liubei);
 
-        User user1 = userMapper.selectByEmail("nowcoder113@sina.com");
+        User user1 = userMapper.selectUserByEmail("nowcoder113@sina.com");
         System.out.println(user1);
 
     }
@@ -64,6 +70,7 @@ public class MapperTest {
         System.out.println(i2);
     }
 
+    /*------------------------DiscussPostMapper-----------------------------*/
     @Test
     public void testSelectPost() {
         List<DiscussPost> discussPosts = discussPostMapper.selectDiscussPosts(149, 0, 5);
@@ -73,5 +80,25 @@ public class MapperTest {
 
         int i = discussPostMapper.selectDiscussPostRows(149);
         System.out.println(i);
+    }
+
+    /*---------------------LoginTicketMapper--------------------------------*/
+    @Test
+    public void testInsertTicket() {
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(101);
+        loginTicket.setTicket("abc");
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + 1000 * 60 * 10));
+        loginTicketMapper.insertLoginTicket(loginTicket);
+    }
+    @Test
+    public void testSelectTicket() {
+        LoginTicket abc = loginTicketMapper.selectLoginTicketByTicket("abc");
+        System.out.println(abc);
+        // 修改status
+        loginTicketMapper.updateStatus("abc", 1);
+        abc = loginTicketMapper.selectLoginTicketByTicket("abc");
+        System.out.println(abc);
     }
 }

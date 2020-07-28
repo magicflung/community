@@ -13,11 +13,11 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserMapper {
 
-    User selectById(int id);
+    User selectUserById(int id);
 
-    User selectByName(String name);
+    User selectUserByName(String name);
 
-    User selectByEmail(String email);
+    User selectUserByEmail(String email);
 
     int insertUser(User user);
 

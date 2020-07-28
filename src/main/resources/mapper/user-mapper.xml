@@ -13,19 +13,19 @@
 
     <!--resultType本来得写上全类名，但是在配置文件配置了type-aliases-package，所以写类名就行-->
     <!--查询需要声明返回类型-->
-    <select id="selectById" resultType="User">
+    <select id="selectUserById" resultType="User">
         select <include refid="selectFields"></include>
         from user
         where id = #{id}
     </select>
 
-    <select id="selectByName" resultType="User">
+    <select id="selectUserByName" resultType="User">
         select <include refid="selectFields"></include>
         from user
         where username = #{username}
     </select>
 
-    <select id="selectByEmail" resultType="User">
+    <select id="selectUserByEmail" resultType="User">
         select <include refid="selectFields"></include>
         from user
         where email = #{email}
