@@ -3,6 +3,7 @@ package com.community.entity;
 import java.util.Date;
 
 /**
+ * 用户信息
  * @author flunggg
  * @date 2020/7/18 19:56
  * @Email: chaste86@163.com

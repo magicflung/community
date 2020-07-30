@@ -30,4 +30,10 @@ public interface DiscussPostMapper {
      * @return 返回论贴一共有多少条
      */
     int selectDiscussPostRows(@Param("userId") int userId);
+
+    DiscussPost selectDiscussPostById(int id);
+
+    int insertDiscussPost(DiscussPost discussPost);
+
+    int updateCommentCount(int id, int commentCount);
 }

@@ -29,6 +29,12 @@ public class MailClient {
     @Value("${spring.mail.username}")
     private String from;
 
+    /**
+     * 发丝邮件
+     * @param to
+     * @param subject
+     * @param content
+     */
     public void sendMail(String to, String subject, String content) {
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
