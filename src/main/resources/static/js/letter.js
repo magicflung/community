@@ -5,10 +5,27 @@ $(function(){
 
 function send_letter() {
 	$("#sendModal").modal("hide");
-	$("#hintModal").modal("show");
-	setTimeout(function(){
-		$("#hintModal").modal("hide");
-	}, 2000);
+
+	var toName = $("#recipient-name").val();
+	var toContent = $("#message-text").val();
+	// 发送ajax
+	$.post(
+		CONTEXT_PATH + "/message/send",
+		{"toName":toName, "toContent":toContent},
+		function (data) {
+			data = $.parseJSON(data);
+			$("#hintBody").text(data.msg);
+			// 显示提示框
+			$("#hintModal").modal("show");
+			// 重新刷新
+			setTimeout(function(){
+				$("#hintModal").modal("hide");
+				location.reload();
+
+			}, 2000);
+		}
+	);
+
 }
 
 function delete_msg() {

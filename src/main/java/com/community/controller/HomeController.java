@@ -3,7 +3,9 @@ package com.community.controller;
 import com.community.entity.DiscussPost;
 import com.community.entity.User;
 import com.community.service.DiscussPostService;
+import com.community.service.LikeService;
 import com.community.service.UserService;
+import com.community.util.CommunityConstant;
 import com.community.util.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,12 +23,15 @@ import java.util.Map;
  * @Email: chaste86@163.com
  */
 @Controller
-public class HomeController {
+public class HomeController implements CommunityConstant {
     @Autowired
     private DiscussPostService discussPostService;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LikeService likeService;
 
     /**
      * 查询论贴列表
@@ -37,6 +42,7 @@ public class HomeController {
     public String getIndexPage(Model model, Page page) {
         // 方法调用前，SpringMvc会自动实例化Model和Page，并将Page注入到Model
         // 所以，在thymeleaf可以直接访问Page对象中的数据
+        // 所有实体类都会注入到Model吗
         page.setRows(discussPostService.findDiscussPostRows(0));
         page.setPath("/index");
 
@@ -49,11 +55,24 @@ public class HomeController {
                 map.put("post", post);
                 User user = userService.findUserById(post.getUserId());
                 map.put("user", user);
+
+                // 查询帖子的赞
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, post.getId());
+                map.put("likeCount", likeCount);
+
                 discussPosts.add(map);
             }
         }
 
         model.addAttribute("discussPosts", discussPosts);
         return "/index";
+    }
+
+    // 虽然springboot遇到异常会自动跳到500
+    // 但是现在统一异常处理，在出现异常时，先将异常加入日志，然后再重定向到500页面
+    // 因为是人为跳转，所以得写一个路径可以跳转到500
+    @GetMapping("//error")
+    public String getErrorPage() {
+        return "/error/500";
     }
 }

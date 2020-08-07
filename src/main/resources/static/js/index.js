@@ -14,6 +14,7 @@ function publish() {
 		{"title":title, "content":content},
 		function (data) {
 			data = $.parseJSON(data);
+			console.log(data);
 			// 在提示框返回信息
 			$("#hintBody").text(data.msg);
 			// 显示提示框

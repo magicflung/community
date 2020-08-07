@@ -1,5 +1,6 @@
 package com.community.controller;
 
+import com.community.util.CommunityUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -145,5 +146,14 @@ public class MyController {
     public String getCookie(@CookieValue("code2") String code) {
         System.out.println(code);
         return "get cookie";
+    }
+
+    /*-------------Ajax---------------------*/
+    @PostMapping("/ajax")
+    @ResponseBody
+    public String testAjax(String name, int age) {
+        System.out.println(name);
+        System.out.println(age);
+        return CommunityUtil.getJSONString(0, "操作成功");
     }
 }

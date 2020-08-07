@@ -1,8 +1,6 @@
 package com.community;
 
-import com.community.dao.DiscussPostMapper;
-import com.community.dao.LoginTicketMapper;
-import com.community.dao.UserMapper;
+import com.community.dao.*;
 import com.community.entity.DiscussPost;
 import com.community.entity.LoginTicket;
 import com.community.entity.User;
@@ -12,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author flunggg
@@ -31,6 +28,9 @@ public class MapperTest {
 
     @Autowired
     private LoginTicketMapper loginTicketMapper;
+
+
+
 
     /*----------------------------UserMapper---------------------------------------*/
     @Test
@@ -73,13 +73,28 @@ public class MapperTest {
     /*------------------------DiscussPostMapper-----------------------------*/
     @Test
     public void testSelectPost() {
-        List<DiscussPost> discussPosts = discussPostMapper.selectDiscussPosts(149, 0, 5);
-        for(DiscussPost discussPost : discussPosts) {
-            System.out.println(discussPost);
-        }
+        // 查询
+        // List<DiscussPost> discussPosts = discussPostMapper.selectDiscussPosts(149, 0, 5);
+        // for(DiscussPost discussPost : discussPosts) {
+        //     System.out.println(discussPost);
+        // }
+        //
+        // int i = discussPostMapper.selectDiscussPostRows(149);
+        // System.out.println(i);
 
-        int i = discussPostMapper.selectDiscussPostRows(149);
-        System.out.println(i);
+        // 插入测试
+        // DiscussPost discussPost = new DiscussPost();
+        // discussPost.setUserId(101);
+        // discussPost.setContent("1111");
+        // discussPost.setCreateTime(new Date());
+        // discussPost.setTitle("111");
+        // discussPost.setType(0);
+        // discussPostMapper.insertDiscussPost(discussPost);
+
+        // 根据id查询
+        DiscussPost discussPost = discussPostMapper.selectDiscussPostById(284);
+        System.out.println(discussPost);
+
     }
 
     /*---------------------LoginTicketMapper--------------------------------*/
@@ -101,4 +116,7 @@ public class MapperTest {
         abc = loginTicketMapper.selectLoginTicketByTicket("abc");
         System.out.println(abc);
     }
+
+    /*---------------comment----------------------------*/
+
 }

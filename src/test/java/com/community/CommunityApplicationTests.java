@@ -1,7 +1,9 @@
 package com.community;
 
+import com.community.service.MyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -13,6 +15,8 @@ class CommunityApplicationTests implements ApplicationContextAware { // 获取IO
 
     private ApplicationContext applicationContext;
 
+    @Autowired
+    MyService myService;
     // Spring在扫描组件时会检查ApplicationContextAware然后会调用下面方法，然后把IOC容器传进来
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -33,11 +37,7 @@ class CommunityApplicationTests implements ApplicationContextAware { // 获取IO
     @Test
     void text1() {
 
-        // AService bean = applicationContext.getBean(AService.class);
-        // System.out.println(bean);
-        //
-        // bean = applicationContext.getBean(AService.class);
-        // System.out.println(bean);
+        myService.va1();
     }
 
     @Test

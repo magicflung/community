@@ -89,9 +89,11 @@
     </appender>
 
     <!--这个跟properties配置的一样-->
+    <!--单独声明某个包的级别-->
     <logger name="com.community" level="debug"/>
-    <!--整个项目默认的包-->
+    <!--整个项目默认的包的级别-->
     <root level="info">
+        <!--启动-->
         <appender-ref ref="FILE_ERROR"/>
         <appender-ref ref="FILE_WARN"/>
         <appender-ref ref="FILE_INFO"/>
