@@ -10,14 +10,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,6 +51,7 @@ public class UserService implements CommunityConstant {
      * 现在查询一个用户信息的步骤：
      * 1. 先从 Redis 查
      * 2. 查不到就到 MySQL查，并缓存到 Redis
+     *
      * @param id
      * @return
      */
@@ -60,7 +59,7 @@ public class UserService implements CommunityConstant {
         // return userMapper.selectUserById(id);
         // 重构
         User user = getCache(id);
-        if(user == null) {
+        if (user == null) {
             user = initCache(id);
         }
         return user;
@@ -68,6 +67,7 @@ public class UserService implements CommunityConstant {
 
     /**
      * 使用Map可以封装多种情况的返回结果
+     *
      * @param user
      * @return 注册
      */
@@ -75,30 +75,30 @@ public class UserService implements CommunityConstant {
         Map<String, Object> map = new HashMap<>();
 
         // 空值判断
-        if(user == null) {
+        if (user == null) {
             throw new IllegalArgumentException("User为空");
         }
-        if(StringUtils.isBlank(user.getUsername())) { // isBlank包含了isEmpty，也包括空格
+        if (StringUtils.isBlank(user.getUsername())) { // isBlank包含了isEmpty，也包括空格
             map.put("usernameMsg", "用户名不允许为空");
             return map;
         }
-        if(StringUtils.isBlank(user.getPassword())) {
+        if (StringUtils.isBlank(user.getPassword())) {
             map.put("passwordMsg", "密码不允许为空");
             return map;
         }
-        if(StringUtils.isBlank(user.getEmail())) {
+        if (StringUtils.isBlank(user.getEmail())) {
             map.put("emailMsg", "邮箱不允许为空");
             return map;
         }
 
         // 判断是否存在
         User u = userMapper.selectUserByName(user.getUsername());
-        if(u != null) {
+        if (u != null) {
             map.put("usernameMsg", "用户名已存在");
             return map;
         }
         u = userMapper.selectUserByEmail(user.getEmail());
-        if(u != null) {
+        if (u != null) {
             map.put("emailMsg", "邮箱已被注册");
             return map;
         }
@@ -126,16 +126,15 @@ public class UserService implements CommunityConstant {
     }
 
     /**
-     *
      * @param userId
      * @param activationCode
      * @return 激活状态
      */
     public int activation(int userId, String activationCode) {
         User user = userMapper.selectUserById(userId);
-        if(user.getStatus() == 1) {
+        if (user.getStatus() == 1) {
             return ACTIVATION_REPEAT;
-        } else if(user.getActivationCode().equals(activationCode)) {
+        } else if (user.getActivationCode().equals(activationCode)) {
             userMapper.updateStatus(userId, 1);
             // 这里更新了数据，那么让该 User从 Redis中清除
             clearCache(userId);
@@ -146,7 +145,6 @@ public class UserService implements CommunityConstant {
     }
 
     /**
-     *
      * @param userId
      * @param headerUrl
      * @return 更新头像
@@ -159,7 +157,6 @@ public class UserService implements CommunityConstant {
     }
 
     /**
-     *
      * @param userId
      * @param password
      * @return 更新密码
@@ -183,6 +180,7 @@ public class UserService implements CommunityConstant {
 
     /**
      * 先用缓存从取用户信息
+     *
      * @param userId
      * @return
      */
@@ -193,6 +191,7 @@ public class UserService implements CommunityConstant {
 
     /**
      * 如果缓存中没有该用户，那么先去数据库查出来缓存到 Redis
+     *
      * @param userId
      * @return
      */
@@ -207,10 +206,42 @@ public class UserService implements CommunityConstant {
     /**
      * 数据更改时从缓存中清除，所以上面有哪些调用update的都需要清空
      * 虽然可以从缓存中更新但可能会有并发问题
+     *
      * @param userId
      */
     public void clearCache(int userId) {
         String userKey = RedisUtil.getUserKey(userId);
         redisTemplate.delete(userKey);
     }
+
+
+    /*---------------------引入Spring Security需要的业务逻辑--------------------------*/
+
+    /**
+     * 根据用户userId来查询它的权限
+     *
+     * @param userId
+     * @return
+     */
+    public Collection<? extends GrantedAuthority> getAuthorities(int userId) {
+        User user = findUserById(userId);
+
+        List<GrantedAuthority> list = new ArrayList<>();
+        list.add(new GrantedAuthority() {
+            @Override
+            public String getAuthority() {
+                switch (user.getType()) {
+                    case 1:
+                        return AUTHOURTTY_ADMIN;
+                    case 2:
+                        return AUTHOURTTY_MODERATOR;
+                    default:
+                        return AUTHOURTTY_USER;
+                }
+            }
+        });
+
+        return list;
+    }
+
 }

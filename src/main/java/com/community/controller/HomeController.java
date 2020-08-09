@@ -71,8 +71,14 @@ public class HomeController implements CommunityConstant {
     // 虽然springboot遇到异常会自动跳到500
     // 但是现在统一异常处理，在出现异常时，先将异常加入日志，然后再重定向到500页面
     // 因为是人为跳转，所以得写一个路径可以跳转到500
-    @GetMapping("//error")
+    @GetMapping("/error")
     public String getErrorPage() {
         return "/error/500";
+    }
+
+    // 拒绝访问时的提示页面
+    @GetMapping("/denied")
+    public String getDeniedPage() {
+        return "/error/404";
     }
 }

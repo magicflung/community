@@ -171,7 +171,68 @@ public class DiscussPostController implements CommunityConstant {
         return "/site/discuss-detail";
     }
 
+    /**
+     * 置顶
+     * @param id 帖子id
+     */
+    @PostMapping("/top")
+    @ResponseBody
+    public String setTop(int id) {
+        discussPostService.updateType(id, 1);
 
+        // 引入ES
+        // 触发发帖子事件，把事件存入ES
+        // 更新
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST) // 这里肯定是帖子，所有直接传
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
 
+        return CommunityUtil.getJSONString(200);
+    }
 
+    /**
+     * 加精
+     * @param id 帖子id
+     */
+    @PostMapping("/wonderful")
+    @ResponseBody
+    public String setWonderful(int id) {
+        discussPostService.updateStatus(id, 1);
+
+        // 引入ES
+        // 触发发帖子事件，把事件存入ES
+        // 更新
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST) // 这里肯定是帖子，所有直接传
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJSONString(200);
+    }
+
+    /**
+     * 删除
+     * @param id 帖子id
+     */
+    @PostMapping("/delete")
+    @ResponseBody
+    public String setDelete(int id) {
+        discussPostService.updateStatus(id, 2);
+
+        // 引入ES
+        // 触发删除帖子事件
+        Event event = new Event()
+                .setTopic(TOPIC_DELETE)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST) // 这里肯定是帖子，所有直接传
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJSONString(200);
+    }
 }

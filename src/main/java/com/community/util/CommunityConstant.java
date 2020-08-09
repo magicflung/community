@@ -69,9 +69,30 @@ public interface CommunityConstant {
     String TOPIC_PUBLISH = "publish";
 
     /**
+     * 引入ES，删除发帖事件
+     * 主题：删除
+     */
+    String TOPIC_DELETE = "delete";
+
+
+    /**
      * 系统用户ID：1
      */
     int SYSTEM_USER_ID = 1;
 
 
+    /**
+     * 权限：普通用户
+     */
+    String AUTHOURTTY_USER = "user";
+
+    /**
+     * 权限：管理员
+     */
+    String AUTHOURTTY_ADMIN = "admin";
+
+    /**
+     * 权限：版主
+     */
+    String AUTHOURTTY_MODERATOR = "moderator";
 }

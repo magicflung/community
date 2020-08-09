@@ -7,6 +7,10 @@ import com.community.service.UserService;
 import com.community.util.CookieUtil;
 import com.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -45,6 +49,16 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 User user = userService.findUserById(loginTicketByTicket.getUserId());
                 // 在本次请求中持有用户，考虑到Session具有共享数据，而这里是多个浏览器发出的请求，得让线程之间隔离，使用ThraedLocal来存储
                 hostHolder.setUser(user);
+
+                // 引入Spring Security
+                // 构建用户认证的结果，并存入SecurityContext，以便Security授权
+                // 第一个参数: 认证的主要信息
+                // 第二个参数: 证书/认证凭证(密码或者能代替密码的东西)
+                // 第三个参数: 当前用户的权限
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        user, user.getPassword(), userService.getAuthorities(user.getId()));
+                // 认证成功后，认证结果会通过SecurityContextHolder存入SecurityContext中
+                SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
             }
         }
 
