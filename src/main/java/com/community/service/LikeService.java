@@ -24,10 +24,12 @@ public class LikeService {
      * 某个用户点赞或取消赞
      * 如果想让所有人（游客）点赞，那么就不需要userId，并且每一个实体只需要一个整型变量来记录点赞次数
      * @param userId 谁点的赞
-     * @param entityType 在哪一个类型点赞，比如帖子，评论，评论中的评论
-     * @param entityId 哪一张帖子或者哪一个评论
+     * @param entityType 在哪一个类型点赞，比如帖子，帖子评论，评论中的评论
+     * @param entityId 点赞的是哪一张帖子或者哪一个评论
+     * @param entityUserId 该帖子或评论的作者
      */
     public void like(int userId, int entityType, int entityId, int entityUserId) {
+
         // String entityLikeKey = RedisUtil.getEntityLikeKey(entityType, entityId);
         // // 判断该用户是否点赞
         // Boolean member = redisTemplate.opsForSet().isMember(entityLikeKey, userId);
@@ -39,6 +41,7 @@ public class LikeService {
         //     // 这里传入userId是为了以后可以知道是谁点的赞，如果只是记录一个整型变量也行。
         //     redisTemplate.opsForSet().add(entityLikeKey, userId);
         // }
+
         // 新增功能：某个用户点赞或取消赞，也顺便记录目标用户收到的赞，需要用到redis事务
         redisTemplate.execute(new SessionCallback() {
             @Override

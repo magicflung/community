@@ -10,7 +10,7 @@ function send_letter() {
 	var toContent = $("#message-text").val();
 	// 发送ajax
 	$.post(
-		CONTEXT_PATH + "/message/send",
+		CONTEXT_PATH + "/letter/send",
 		{"toName":toName, "toContent":toContent},
 		function (data) {
 			data = $.parseJSON(data);

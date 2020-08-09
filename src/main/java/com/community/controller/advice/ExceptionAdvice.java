@@ -14,6 +14,8 @@ import java.io.PrintWriter;
 
 
 /**
+ * 虽然springboot会自动跳转到error目录下的网页
+ * 但是不会加到日志中，所以这理可以加入到日志。
  * @author flunggg
  * @date 2020/8/4 11:14
  * @Email: chaste86@163.com
@@ -37,15 +39,17 @@ public class ExceptionAdvice {
         for(StackTraceElement element : e.getStackTrace()) {
             LOGGER.error(element.toString());
         }
-        // 重定向
-        // 需要注意，可能是同步请求，可能是异步请求
-        // 同步请求就返回html，但是异步请求返回json
+        // 默认异常重定向到error目录中的网页
+        // 但是需要注意，请求可能是同步请求，可能是异步请求
+        // 同步请求就返回html（500页面，404页面），异步请求返回json（提示）
         // 以下是固定代码
         String xRequestedWith = request.getHeader("x-requested-with");
         if("XMLHttpRequest".equals(xRequestedWith)) {
             // 异步请求
-            // response.setContentType("application/json"); // 如果写字符串，浏览器自动转为json对象
-            response.setContentType("application/plain;charset=utf-8"); // 也可以向浏览器返回普通字符串，也可以是json格式，但是需要人为的转为json对象
+            // 告诉请求的接收者，body体的数据格式是符合json格式的，接受者拿到这些数据后可以直接使用相应的格式化方法转换成处理语言识别的数据对象或者框架拦截器自动进行转换，能更早发现数据传递上的错误
+            // response.setContentType("application/json");
+            // 接收者需要自己执行判断怎么处理这个数据。
+            response.setContentType("application/plain;charset=utf-8");
             PrintWriter writer = response.getWriter();
             // 人为转为json
             writer.write(CommunityUtil.getJSONString(500, "服务器异常！"));

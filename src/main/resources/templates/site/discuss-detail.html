@@ -85,7 +85,7 @@
 							<ul class="d-inline float-right">
 								<!--this表示这个a标签，整个页面赞的a标签都会去调用这个like，为了区分是点的是哪一个赞，1表示帖子类型，后面是帖子id-->
 								<li class="d-inline ml-2">
-									<a href="javascript:;" th:onclick="|like(this, 1, ${post.id}, ${post.userId});|" class="text-primary">
+									<a href="javascript:;" th:onclick="|like(this, 1, ${post.id}, ${post.userId}, ${post.id});|" class="text-primary">
 										<b th:text="${likeStatus==1?'已赞':'赞'}">赞</b> <i th:text="${likeCount}">11</i>
 									</a>
 								</li>
@@ -140,7 +140,7 @@
 								<ul class="d-inline float-right">
 									<!--评论类型-->
 									<li class="d-inline ml-2">
-										<a href="javascript:;" th:onclick="|like(this, 2, ${cvo.comment.id}, ${cvo.comment.userId});|" class="text-primary">
+										<a href="javascript:;" th:onclick="|like(this, 2, ${cvo.comment.id}, ${cvo.comment.userId}, ${post.id});|" class="text-primary">
 											<b th:text="${cvo.likeStatus==1?'已赞':'赞'}">赞</b> (<i th:text="${cvo.likeCount}">11</i>)
 										</a>
 									</li>
@@ -174,7 +174,7 @@
 										<span th:text="${#dates.format(rep.reply.createTime, 'yyyy-MM-dd HH:mm:ss')}">2019-04-15 15:32:18</span>
 										<ul class="d-inline float-right">
 											<li class="d-inline ml-2">
-												<a href="javascript:;" th:onclick="|like(this, 2, ${rep.reply.id}, ${rep.reply.userId});|" class="text-primary">
+												<a href="javascript:;" th:onclick="|like(this, 2, ${rep.reply.id}, ${rep.reply.userId}, ${post.id});|" class="text-primary">
 													<b th:text="${rep.likeStatus==1?'已赞':'赞'}">赞</b> (<i th:text="${rep.likeCount}">11</i>)
 												</a>
 											</li>

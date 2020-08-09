@@ -2,7 +2,9 @@ package com.community.controller;
 
 import com.community.entity.Comment;
 import com.community.entity.DiscussPost;
+import com.community.entity.Event;
 import com.community.entity.User;
+import com.community.event.EventProducer;
 import com.community.service.CommentService;
 import com.community.service.DiscussPostService;
 import com.community.service.LikeService;
@@ -17,10 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author flunggg
@@ -45,6 +44,10 @@ public class DiscussPostController implements CommunityConstant {
 
     @Autowired
     private LikeService likeService;
+
+    @Autowired
+    private EventProducer eventProducer;
+
     /**
      * 异步添加帖子
      * @return
@@ -62,7 +65,23 @@ public class DiscussPostController implements CommunityConstant {
         if(StringUtils.isBlank(content)) {
             return CommunityUtil.getJSONString(403, "内容不能为空");
         }
-        discussPostService.addDiscussPost(user.getId(), title, content);
+
+        DiscussPost discussPost = new DiscussPost();
+        discussPost.setUserId(user.getId());
+        discussPost.setTitle(title);
+        discussPost.setContent(content);
+        discussPost.setCreateTime(new Date());
+        discussPostService.addDiscussPost(discussPost);
+
+        // 引入ES
+        // 触发发帖子事件，把事件存入ES
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(user.getId())
+                .setEntityType(ENTITY_TYPE_POST) // 这里肯定是帖子，所有直接传
+                .setEntityId(discussPost.getId());
+        eventProducer.fireEvent(event);
+
 
         return CommunityUtil.getJSONString(200, "发布成功！");
     }
@@ -84,11 +103,11 @@ public class DiscussPostController implements CommunityConstant {
         User user = userService.findUserById(post.getUserId());
         model.addAttribute("user", user);
         // 点赞数量
-        long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, discussPostId);
+        long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, discussPostId);
         model.addAttribute("likeCount", likeCount);
         // 当前用户的点赞状态，如果赞过就前端显示已赞，但是这里还得处理没登陆的状态，因为没登录也可以看点赞数量但不能改变状态。
         int likeStatus = hostHolder.getUser() == null ? 0 :
-                likeService.findEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_COMMENT, discussPostId);
+                likeService.findEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_POST, discussPostId);
         model.addAttribute("likeStatus", likeStatus);
         // 评论
         page.setLimit(5);
@@ -96,7 +115,7 @@ public class DiscussPostController implements CommunityConstant {
         // 帖子在的评论总数，不计评论楼中楼
         page.setRows(post.getCommentCount());
         // 分页查询帖子中的评论
-        List<Comment> postComment = commentService.findCommentsByEntity(ENTITY_TYPE_COMMENT, discussPostId, page.getOffSet(), page.getLimit());
+        List<Comment> postComment = commentService.findCommentsByEntity(ENTITY_TYPE_POST, discussPostId, page.getOffSet(), page.getLimit());
         // 一个评论还需要包含用户信息，所以用Map来存储，但是有多个评论
         List<Map<String, Object>> commentAndUserList = new ArrayList<>();
         if(postComment != null) {
@@ -107,14 +126,14 @@ public class DiscussPostController implements CommunityConstant {
                 // 评论的用户
                 commentAndUser.put("user", userService.findUserById(comment.getUserId()));
                 // 点赞数量
-                likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_REPLY, comment.getId());
+                likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, comment.getId());
                 commentAndUser.put("likeCount", likeCount);
                 // 当前用户的点赞状态，如果赞过就前端显示已赞，但是这里还得处理没登陆的状态，因为没登录也可以看点赞数量但不能改变状态。
                 likeStatus = hostHolder.getUser() == null ? 0 :
-                        likeService.findEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_REPLY, comment.getId());
+                        likeService.findEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_COMMENT, comment.getId());
                 commentAndUser.put("likeStatus", likeStatus);
                 // 还有楼中楼评论，需要的是评论的id, 不需要分页，全部查出
-                List<Comment> replyComment = commentService.findCommentsByEntity(ENTITY_TYPE_REPLY, comment.getId(), 0, Integer.MAX_VALUE);
+                List<Comment> replyComment = commentService.findCommentsByEntity(ENTITY_TYPE_COMMENT, comment.getId(), 0, Integer.MAX_VALUE);
                 // 楼中楼评论还包含用户，有多个楼中楼
                 List<Map<String, Object>> replyAndUserList = new ArrayList<>();
                 if(replyComment != null) {
@@ -128,11 +147,11 @@ public class DiscussPostController implements CommunityConstant {
                         User target = reply.getTargetId() == 0 ? null : userService.findUserById(reply.getTargetId());
                         replyAndUser.put("replyTargetUser", target);
                         // 点赞数量
-                        likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_REPLY, reply.getId());
+                        likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, reply.getId());
                         replyAndUser.put("likeCount", likeCount);
                         // 当前用户的点赞状态，如果赞过就前端显示已赞，但是这里还得处理没登陆的状态，因为没登录也可以看点赞数量但不能改变状态。
                         likeStatus = hostHolder.getUser() == null ? 0 :
-                                likeService.findEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_REPLY, reply.getId());
+                                likeService.findEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_COMMENT, reply.getId());
                         replyAndUser.put("likeStatus", likeStatus);
 
                         replyAndUserList.add(replyAndUser);
@@ -140,7 +159,7 @@ public class DiscussPostController implements CommunityConstant {
                 }
                 commentAndUser.put("replies", replyAndUserList);
                 // 每一个小评论的回复的数量
-                int replyCount = commentService.findCountByEntity(ENTITY_TYPE_REPLY, comment.getId());
+                int replyCount = commentService.findCountByEntity(ENTITY_TYPE_COMMENT, comment.getId());
                 commentAndUser.put("replyCount", replyCount);
 
                 // 最后，把评论添加回评论列表

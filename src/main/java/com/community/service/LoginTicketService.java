@@ -1,12 +1,13 @@
 package com.community.service;
 
-import com.community.dao.LoginTicketMapper;
 import com.community.dao.UserMapper;
 import com.community.entity.LoginTicket;
 import com.community.entity.User;
 import com.community.util.CommunityUtil;
+import com.community.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -22,12 +23,25 @@ import java.util.Map;
 @Service
 public class LoginTicketService {
 
+    // 废弃，使用Redis来代替存储
+    // @Autowired
+    // private LoginTicketMapper loginTicketMapper;
+
     @Autowired
-    private LoginTicketMapper loginTicketMapper;
+    private RedisTemplate redisTemplate;
 
     @Autowired
     private UserMapper userMapper;
 
+    /**
+     * 登录
+     *
+     * 重构：使用Redis来代替MySQL存储登录凭证
+     * @param username
+     * @param password
+     * @param expiredSeconds
+     * @return
+     */
     public Map<String, Object> login(String username, String password, int expiredSeconds) {
         Map<String, Object> map = new HashMap<>();
 
@@ -64,18 +78,44 @@ public class LoginTicketService {
         loginTicket.setTicket(CommunityUtil.generateUUID());
         loginTicket.setStatus(0);
         loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
-        loginTicketMapper.insertLoginTicket(loginTicket);
+
+        // 重构：使用 Redis 代替
+        // loginTicketMapper.insertLoginTicket(loginTicket);
+        // 存入 Redis
+        String loginTicketKey = RedisUtil.getTicketKey(loginTicket.getTicket());
+        // 虽然 loginTicket 是一个对象，而opsForValue存入的是字符串，但是在Redis配置类已经设置了，自动序列化为JSON字符串
+        redisTemplate.opsForValue().set(loginTicketKey, loginTicket);
+
         // 我们只需要ticket
         map.put("loginUser", user);
         map.put("ticket", loginTicket.getTicket());
         return map;
     }
 
+    /**
+     * 登出
+     * 但是不用删，可能未来可以利用它扩展功能，比如用户登录天数，每一年登录多少天
+     * @param ticket 需要无效的登录凭证
+     */
     public void logout(String ticket) {
-        loginTicketMapper.updateStatus(ticket, 1);
+        // 重构
+        // loginTicketMapper.updateStatus(ticket, 1);
+
+        // 从 Redis 删掉 ticket
+        String loginTicketKey = RedisUtil.getTicketKey(ticket);
+        // 先从 Redis取出来
+        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(loginTicketKey);
+        // 设置为1，表示无效
+        loginTicket.setStatus(1);
+        // 更新
+        redisTemplate.opsForValue().set(loginTicketKey, loginTicket);
     }
 
     public LoginTicket findLoginTicketByTicket(String ticket) {
-        return loginTicketMapper.selectLoginTicketByTicket(ticket);
+        // 重构
+        // return loginTicketMapper.selectLoginTicketByTicket(ticket);
+        // 从 Redis 查
+        String loginTicketKey = RedisUtil.getTicketKey(ticket);
+        return (LoginTicket) redisTemplate.opsForValue().get(loginTicketKey);
     }
 }

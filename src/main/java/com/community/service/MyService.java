@@ -1,5 +1,6 @@
 package com.community.service;
 
+import com.community.entity.DiscussPost;
 import com.community.entity.User;
 import com.community.util.CommunityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +44,16 @@ public class MyService {
         user.setCreateTime(new Date());
         userService.register(user);
 
-        discussPostService.addDiscussPost(user.getId(), "hello", "hahaha");
 
-        Integer.valueOf("abc");
+
+        // 新人帖子
+        DiscussPost discussPost = new DiscussPost();
+        discussPost.setUserId(user.getId());
+        discussPost.setTitle("新人！");
+        discussPost.setContent("我来了");
+        discussPost.setCreateTime(new Date());
+        discussPost.setStatus(1);
+        discussPostService.addDiscussPost(discussPost);
 
         return "ok";
     }
@@ -69,8 +77,16 @@ public class MyService {
             user.setCreateTime(new Date());
             userService.register(user);
 
-            discussPostService.addDiscussPost(user.getId(), "hello", "hahaha");
+            // 新人帖子
+            DiscussPost discussPost = new DiscussPost();
+            discussPost.setUserId(user.getId());
+            discussPost.setTitle("新人！");
+            discussPost.setContent("我来了");
+            discussPost.setCreateTime(new Date());
+            discussPost.setStatus(1);
+            discussPostService.addDiscussPost(discussPost);
 
+            // 故意抛异常
             Integer.valueOf("abc");
 
             return "ok";

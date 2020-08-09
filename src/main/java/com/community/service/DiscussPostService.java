@@ -32,19 +32,13 @@ public class DiscussPostService {
         return discussPostMapper.selectDiscussPostRows(userId);
     }
 
-    public int addDiscussPost(int userId, String title, String content) {
+    public int addDiscussPost(DiscussPost discussPost) {
         // 需要进行标签转义
-        title = HtmlUtils.htmlEscape(title);
-        content = HtmlUtils.htmlEscape(content);
+        discussPost.setTitle(HtmlUtils.htmlEscape(discussPost.getTitle()));
+        discussPost.setContent(HtmlUtils.htmlEscape(discussPost.getContent()));
         // 敏感词过滤
-        title = sensitiveFilter.filter(title);
-        content = sensitiveFilter.filter(content);
-
-        DiscussPost discussPost = new DiscussPost();
-        discussPost.setUserId(userId);
-        discussPost.setTitle(title);
-        discussPost.setContent(content);
-        discussPost.setCreateTime(new Date());
+        discussPost.setTitle(sensitiveFilter.filter(discussPost.getTitle()));
+        discussPost.setContent(sensitiveFilter.filter(discussPost.getContent()));
 
         return discussPostMapper.insertDiscussPost(discussPost);
     }

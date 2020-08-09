@@ -42,6 +42,11 @@ public class ServiceLogAspect {
     public void before(JoinPoint joinPoint) {
         // 获取ip
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if(servletRequestAttributes == null) {
+            // 原先所有的业务层都是通过Conrtoller去访问的
+            // 特殊情况，就是引入kafka后，消费者也会去调用业务，所以这次调用就没有request
+            return ;
+        }
         HttpServletRequest request = servletRequestAttributes.getRequest();
         String ip = request.getRemoteHost();
         String now = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());

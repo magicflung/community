@@ -65,7 +65,14 @@ public class MessageMapperTest {
      */
     @Test
     public void testSelectLetterUnreadCount() {
-        int i = messageMapper.selectLetterUnreadCount(111, null);
+        int i = messageMapper.selectUnreadLetterCount(155, null);
         System.out.println(i);
     }
+
+    @Test
+    public void testSelectUnreadNoticeCount() {
+        int follow = messageMapper.selectUnreadNoticeCount(0, "follow");
+        System.out.println(follow);
+    }
+
 }

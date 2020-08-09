@@ -25,7 +25,7 @@ public class RedisConfig {
         // 访问数据库之前，得先连接
         template.setConnectionFactory(factory);
 
-        // 因为这是java类型数据，跟redis类型不一定，所以需要指定序列化的方式
+        // 因为这是java类型数据，跟redis类型不一样，所以需要指定序列化的方式
         // 设置普通的key的序列化方式
         template.setKeySerializer(RedisSerializer.string());
         // 设置普通value的序列化方式

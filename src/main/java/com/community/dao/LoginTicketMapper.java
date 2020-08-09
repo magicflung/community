@@ -15,11 +15,14 @@ import org.apache.ibatis.annotations.*;
  *             "</if>",
  *             "</script>"
  *     })
+ *
+ * 最新优化：使用 Redis 来代替 MySQL 存储 login_ticket
  * @author flunggg
  * @date 2020/7/23 9:15
  * @Email: chaste86@163.com
  */
 @Mapper
+@Deprecated
 public interface LoginTicketMapper {
 
     @Insert({

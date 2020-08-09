@@ -11,7 +11,7 @@ public class Comment {
     private int id;
     private int userId;
     private int entityType; // 类型，比如帖子评论，帖子评论中的评论，未来还可以有课程的评论
-    private int entityId; // 哪一张贴：帖子id，楼中楼：评论id
+    private int entityId; // 哪一张贴：帖子评论id，楼中楼：评论id
     private int targetId; // 回复的是谁，比如可以回复楼主，回复层主，回复层中的其他用户，这里主要是处理回复层中的其他用户
     private String content;
     private int status; // 0表示有效，1表示删除
