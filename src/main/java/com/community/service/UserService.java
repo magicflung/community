@@ -45,6 +45,9 @@ public class UserService implements CommunityConstant {
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
+
+
+
     /**
      * 原先是一直从MySQL查
      * 引入 Redis

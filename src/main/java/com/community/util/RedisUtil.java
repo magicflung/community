@@ -20,6 +20,12 @@ public class RedisUtil {
     private static final String PREFIX_TICKET = "ticket";
     // 用户信息
     private static final String PREFIX_USER = "user";
+    // 统计单日游客访问量（通过IP）
+    private static final String PREFIX_UX = "ux";
+    // 日活跃用户（通过用户ID）
+    private static final String PREFIX_DAU = "dau";
+    // 统计帖子分数
+    private static final String PREFIX_POST = "post";
 
     /**
      * 某一个实体的赞
@@ -89,5 +95,51 @@ public class RedisUtil {
      */
     public static String getUserKey(int userId) {
         return PREFIX_USER + SPLIT + userId;
+    }
+
+    /**
+     * 统计单日访问数量，以IP来统计
+     * @param ip 年月日
+     * @return
+     */
+    public static String getUVKey(String ip) {
+        return PREFIX_UX + SPLIT + ip;
+    }
+
+    /**
+     * 统计区间的访问数量，以IP来统计
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return
+     */
+    public static String getUVKey(String startDate, String endDate) {
+        return PREFIX_UX + SPLIT + startDate + SPLIT + endDate;
+    }
+
+    /**
+     * 统计单日的用户活跃量，以用户ID来统计
+     * @param userId 年月日
+     * @return
+     */
+    public static String getDAUKey(String userId) {
+        return PREFIX_DAU + SPLIT + userId;
+    }
+
+    /**
+     * 统计区间内的用户活跃量，以用户ID来统计
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return
+     */
+    public static String getDAUKey(String startDate, String endDate) {
+        return PREFIX_DAU + SPLIT + startDate + SPLIT + endDate;
+    }
+
+    /**
+     * 帖子分数，可以排行
+     * @return
+     */
+    public static String getPostScoreKey() {
+        return PREFIX_POST + SPLIT + "score";
     }
 }

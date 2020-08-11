@@ -18,9 +18,11 @@ public interface DiscussPostMapper {
      * @param userId 用户id，如果为0则表示全部用户
      * @param offset 行数
      * @param limit 一页多少条
+     * // 代码重构
+     * @param orderMode 0:表示按type倒序然后再轮到create_time倒序；1：表示按照按type倒序然后score倒序最后再轮到create_time倒序
      * @return 返回一个论贴列表
      */
-    List<DiscussPost> selectDiscussPosts(int userId, int offset, int limit);
+    List<DiscussPost> selectDiscussPosts(int userId, int offset, int limit, int orderMode);
 
 
     /**
@@ -40,4 +42,7 @@ public interface DiscussPostMapper {
     int updateType(int id, int type);
 
     int updateStatus(int id, int status);
+
+    int updateScore(int id, double score);
+
 }

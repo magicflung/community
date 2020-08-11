@@ -3,7 +3,10 @@ package com.community.service;
 import com.community.entity.DiscussPost;
 import com.community.entity.User;
 import com.community.util.CommunityUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Isolation;
@@ -26,6 +29,8 @@ public class MyService {
 
     @Autowired
     private DiscussPostService discussPostService;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MyService.class);
 
     /**
      * propagation:事务交叉一起的问题，以哪一个事务为准
@@ -111,4 +116,19 @@ public class MyService {
         //     }
         // });
     }
+
+
+    // 可以让该方法在多线程花环境下被异步调用
+    // 就类似于任务
+    @Async
+    public void execute1() {
+        LOGGER.debug("execute1!!");
+    }
+
+    // 多线程的定时任务
+    // 会自动被调用
+    // @Scheduled(initialDelay = 5000, fixedDelay = 1000)
+    // public void execute2() {
+    //     LOGGER.debug("定时execute2!!");
+    // }
 }

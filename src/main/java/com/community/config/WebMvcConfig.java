@@ -1,5 +1,6 @@
 package com.community.config;
 
+import com.community.controller.interceptor.DataInterceptor;
 import com.community.controller.interceptor.LoginTicketInterceptor;
 import com.community.controller.interceptor.MessageInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
     private MessageInterceptor messageInterceptor;
 
+    @Autowired
+    private DataInterceptor dateInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // registry.addInterceptor(myInterceptor)
@@ -46,6 +50,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         // 登录后，未读消息的总数
         registry.addInterceptor(messageInterceptor)
+                .excludePathPatterns("/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg");
+
+        // 统计游客和用户的数量
+        registry.addInterceptor(dateInterceptor)
                 .excludePathPatterns("/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg");
 
     }

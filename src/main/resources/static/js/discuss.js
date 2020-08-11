@@ -1,5 +1,6 @@
 /*页面加载完会调用*/
 $(function () {
+    /*绑定好事件*/
     $("#topBtn").click(setTop);
     $("#wonderfulBtn").click(setWonderful);
     $("#deleteBtn").click(setDelete);

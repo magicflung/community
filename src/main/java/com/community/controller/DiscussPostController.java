@@ -9,12 +9,10 @@ import com.community.service.CommentService;
 import com.community.service.DiscussPostService;
 import com.community.service.LikeService;
 import com.community.service.UserService;
-import com.community.util.CommunityConstant;
-import com.community.util.CommunityUtil;
-import com.community.util.HostHolder;
-import com.community.util.Page;
+import com.community.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +45,9 @@ public class DiscussPostController implements CommunityConstant {
 
     @Autowired
     private EventProducer eventProducer;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 异步添加帖子
@@ -81,6 +82,13 @@ public class DiscussPostController implements CommunityConstant {
                 .setEntityType(ENTITY_TYPE_POST) // 这里肯定是帖子，所有直接传
                 .setEntityId(discussPost.getId());
         eventProducer.fireEvent(event);
+
+        // 计算帖子分数
+        String redisKey = RedisUtil.getPostScoreKey();
+        // 如何选择数据类型呢？
+        // 如果放到队列中，假设对A帖子点赞，然后对B，后再对A，这就重复算了
+        // 而且对顺序没有要求，比如前一次对A点赞，那么统计分数，后一次又对A点赞，又得统计，还不如去重，选个最晚的统计分数
+        redisTemplate.opsForSet().add(redisKey, discussPost.getId());
 
 
         return CommunityUtil.getJSONString(200, "发布成功！");
@@ -181,7 +189,7 @@ public class DiscussPostController implements CommunityConstant {
         discussPostService.updateType(id, 1);
 
         // 引入ES
-        // 触发发帖子事件，把事件存入ES
+        // 触发更新帖子事件，把事件存入ES
         // 更新
         Event event = new Event()
                 .setTopic(TOPIC_PUBLISH)
@@ -203,7 +211,7 @@ public class DiscussPostController implements CommunityConstant {
         discussPostService.updateStatus(id, 1);
 
         // 引入ES
-        // 触发发帖子事件，把事件存入ES
+        // 触发更新帖子事件，把事件存入ES
         // 更新
         Event event = new Event()
                 .setTopic(TOPIC_PUBLISH)
@@ -211,6 +219,11 @@ public class DiscussPostController implements CommunityConstant {
                 .setEntityType(ENTITY_TYPE_POST) // 这里肯定是帖子，所有直接传
                 .setEntityId(id);
         eventProducer.fireEvent(event);
+
+        // 排行榜计算分数
+        // 计算帖子分数
+        String redisKey = RedisUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey, id);
 
         return CommunityUtil.getJSONString(200);
     }
