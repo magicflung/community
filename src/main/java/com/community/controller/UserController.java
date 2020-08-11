@@ -1,13 +1,13 @@
 package com.community.controller;
 
-import com.community.annotation.LoginRequired;
+import com.community.entity.Comment;
+import com.community.entity.DiscussPost;
 import com.community.entity.User;
-import com.community.service.FollowService;
-import com.community.service.LikeService;
-import com.community.service.UserService;
+import com.community.service.*;
 import com.community.util.CommunityConstant;
 import com.community.util.CommunityUtil;
 import com.community.util.HostHolder;
+import com.community.util.Page;
 import com.qiniu.util.Auth;
 import com.qiniu.util.StringMap;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +18,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author flunggg
@@ -52,6 +57,9 @@ public class UserController implements CommunityConstant {
     @Autowired
     private FollowService followService;
 
+    @Autowired
+    private DiscussPostService discussPostService;
+
     // 引入七牛云
     @Value("${qiniu.key.access}")
     private String accessKey;
@@ -65,6 +73,8 @@ public class UserController implements CommunityConstant {
     @Value("${qiniu.bucket.header.url}")
     private String headerBucketUrl;
 
+    @Autowired
+    private CommentService commentService;
 
     /**
      * @return 跳转到用户个人设置页面
@@ -121,8 +131,89 @@ public class UserController implements CommunityConstant {
             hasFollowed = followService.hasFollowed(hostHolder.getUser().getId(), ENTITY_TYPE_USER, userId);
         }
         model.addAttribute("hasFollowed", hasFollowed);
+
         return "/site/profile";
     }
+
+    /**
+     * 个人主页：帖子
+     * @param userId
+     * @param model
+     * @param page
+     * @return
+     */
+    @GetMapping("/profile/post/{userId}")
+    public String getUserPost(@PathVariable("userId") int userId, Model model, Page page) {
+        User user = userService.findUserById(userId);
+        if(user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        page.setLimit(10);
+        page.setPath("/user/profile/post/" + userId);
+        int postCount = discussPostService.findDiscussPostRows(userId);
+        page.setRows(postCount);
+        // 对用户发布的帖子进行分页查询
+        List<DiscussPost> list = discussPostService.findDiscussPosts(userId, page.getOffSet(), page.getLimit(), 0);
+        List<Map<String, Object>> discussPosts = new ArrayList<>();
+        for(DiscussPost discussPost : list) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("post", discussPost);
+            long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, discussPost.getId());
+            map.put("likeCount", likeCount);
+
+            discussPosts.add(map);
+        }
+        model.addAttribute("user", user);
+        model.addAttribute("posts", discussPosts);
+        model.addAttribute("postCount", postCount);
+
+        return "/site/my-post";
+    }
+
+    /**
+     * 个人主页：帖子
+     * @param userId
+     * @param model
+     * @param page
+     * @return
+     */
+    @GetMapping("/profile/reply/{userId}")
+    public String getUserReply(@PathVariable("userId") int userId, Model model, Page page) {
+        User user = userService.findUserById(userId);
+        if(user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        page.setLimit(10);
+        page.setPath("/user/profile/reply/" + userId);
+        int commentCount = commentService.findCountByUserId(userId);
+        page.setRows(commentCount);
+        // 对用户发布的帖子进行分页查询
+        List<Comment> list = commentService.findCommentsByUserId(userId, page.getOffSet(), page.getLimit());
+        List<Map<String, Object>> comments = new ArrayList<>();
+        for(Comment comment : list) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("comment", comment);
+
+            // 如果评论是楼中楼，它的 entityId 是它楼层评论的ID，不是帖子的ID
+            if(comment.getEntityType() == ENTITY_TYPE_COMMENT) {
+                // 查询帖子ID
+                while(comment.getEntityType() != ENTITY_TYPE_POST) {
+                    comment = commentService.findCommentById(comment.getEntityId());
+                }
+            }
+
+            DiscussPost post = discussPostService.findDiscussPostById(comment.getEntityId());
+            map.put("post", post);
+
+            comments.add(map);
+        }
+        model.addAttribute("user", user);
+        model.addAttribute("comments", comments);
+        model.addAttribute("commentCount", commentCount);
+
+        return "/site/my-reply";
+    }
+
 
     /**
      * 引入七牛云后，在上传头像后更新表中的头像路径
@@ -222,7 +313,6 @@ public class UserController implements CommunityConstant {
      * @param model
      * @return
      */
-    @LoginRequired
     @PostMapping("/password")
     public String updatePassword(String oldPassword, String newPassword, Model model) {
         if(StringUtils.isBlank(oldPassword)) {
@@ -246,4 +336,6 @@ public class UserController implements CommunityConstant {
         userService.updatePassword(user.getId(), newPassword);
         return "redirect:/index";
     }
+
+
 }

@@ -17,10 +17,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletOutputStream;
@@ -129,8 +126,8 @@ public class LoginController implements CommunityConstant {
     @GetMapping("/kaptcha")
     public void kaptcha(HttpServletResponse response) {
         // 生成验证码
-        String text = kaptchaProducer.createText();
-        BufferedImage image = kaptchaProducer.createImage(text);
+        String verifycode = kaptchaProducer.createText();
+        BufferedImage image = kaptchaProducer.createImage(verifycode);
 
         // 将验证码存入session
         // session.setAttribute("kaptcha", text);
@@ -144,7 +141,7 @@ public class LoginController implements CommunityConstant {
         response.addCookie(cookie);
         // 将验证码存入Redis
         String kaptchaKey = RedisUtil.getKaptchaKey(kaptchaOwner);
-        redisTemplate.opsForValue().set(kaptchaKey, text, 60, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(kaptchaKey, verifycode, 60, TimeUnit.SECONDS);
 
         // 将图片输出到浏览器
         response.setContentType("image/png");
@@ -177,20 +174,21 @@ public class LoginController implements CommunityConstant {
 
 
         // 现在从Redis中取
-        String kaptcha = null;
+        String verifycode = null;
         // 获取临时凭证，通过临时凭证来获取校验码。
         // 需要注意，因为是临时的，所以如果过去就取不到，如果使用@CookieValue注解取获取kaptchaOwner，获取不到就报错，所以采用下面的方式。
-        String kaptchaOwner = CookieUtil.getValue(request, "kaptchaOwner");
+        Cookie cookie = CookieUtil.getValue(request, "kaptchaOwner");
+        String kaptchaOwner = cookie.getValue() == null ? null : cookie.getValue();
         // 如果没有失效
         if(StringUtils.isNotBlank(kaptchaOwner)) {
             String kaptchaKey = RedisUtil.getKaptchaKey(kaptchaOwner);
-            kaptcha = (String) redisTemplate.opsForValue().get(kaptchaKey);
+            verifycode = (String) redisTemplate.opsForValue().get(kaptchaKey);
         } else {
             model.addAttribute("codeMsg", "验证码已失效，请刷新验证码");
             return "/site/login";
         }
 
-        if(StringUtils.isBlank(kaptcha) || StringUtils.isBlank(code) || !code.equalsIgnoreCase(kaptcha)) {
+        if(StringUtils.isBlank(verifycode) || StringUtils.isBlank(code) || !code.equalsIgnoreCase(verifycode)) {
             model.addAttribute("codeMsg", "验证码不正确");
             return "/site/login";
         }
@@ -199,7 +197,7 @@ public class LoginController implements CommunityConstant {
         int expiredSeconds = rememberme ? REMEMBER_EXPIRED_SECONDS : DEFAULT_EXPIRED_SECONDS;
         Map<String, Object> map = loginTicketService.login(username, password, expiredSeconds);
         if(map.containsKey("ticket")) {
-            Cookie cookie = new Cookie("ticket", map.get("ticket").toString());
+            cookie = new Cookie("ticket", map.get("ticket").toString());
             cookie.setPath(contextPath);
             cookie.setMaxAge(expiredSeconds);
             response.addCookie(cookie);
@@ -225,5 +223,112 @@ public class LoginController implements CommunityConstant {
         SecurityContextHolder.clearContext();
 
         return "redirect:/login";
+    }
+
+
+
+    /**
+     * 忘记密码页面
+     * @return
+     */
+    @GetMapping("/forget")
+    public String forgetPage() {
+
+        return "/site/forget";
+    }
+
+    /**
+     * 获取忘记密码的验证码
+     * @param email
+     * @param response
+     */
+    @GetMapping("/forget/verify")
+    @ResponseBody
+    public String verifycode(String email, HttpServletResponse response) {
+        // 空值判断
+        if (StringUtils.isBlank(email)) {
+            return CommunityUtil.getJSONString(403, "邮箱不允许为空!");
+        }
+        String verifycode = kaptchaProducer.createText();
+
+        // 先创建一个临时凭证
+        String owner = CommunityUtil.generateUUID();
+        Cookie cookie = new Cookie("owner", owner);
+        cookie.setMaxAge(300); // 300s
+        cookie.setPath(contextPath); // 有效路径
+        response.addCookie(cookie);
+        // 将验证码和邮箱存入Redis
+        String kaptchaKey = RedisUtil.getKaptchaKey(owner);
+        String emailKey = RedisUtil.getEmailKey(email);
+        // 有效5分钟
+        redisTemplate.opsForValue().set(kaptchaKey, verifycode, 300, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(emailKey, email, 300, TimeUnit.SECONDS);
+
+        // 发送邮件
+        userService.verifycode(email, verifycode);
+
+        return CommunityUtil.getJSONString(200, "发送成功!");
+    }
+
+    /**
+     * 忘记密码：修改密码
+     * @param email 邮箱
+     * @param code 验证码
+     * @param password 要修改的密码
+     * @param model
+     * @param request
+     * @return
+     */
+    @PostMapping("/forget")
+    public String updatePassword(String email, String code, String password, Model model,
+                                 HttpServletRequest request, HttpServletResponse response) {
+        // 空值判断
+        if (StringUtils.isBlank(email)) {
+            model.addAttribute("emailMsg", "邮箱不允许为空");
+            return "/site/forget";
+        }
+        if (StringUtils.isBlank(code)) {
+            model.addAttribute("codeMsg", "验证码不允许为空");
+            return "/site/forget";
+        }
+        if (StringUtils.isBlank(code)) {
+            model.addAttribute("codeMsg", "验证码不允许为空");
+            return "/site/forget";
+        }
+        // 现在从Redis中取
+        String verifycode = null;
+        // 获取临时凭证，通过临时凭证来获取校验码。
+        Cookie cookie = CookieUtil.getValue(request, "owner");
+        String owner = cookie.getValue() == null ? null : cookie.getValue();
+        // 如果没有失效
+        String kaptchaKey = null;
+        if(StringUtils.isNotBlank(owner)) {
+            kaptchaKey = RedisUtil.getKaptchaKey(owner);
+            verifycode = (String) redisTemplate.opsForValue().get(kaptchaKey);
+        } else {
+            model.addAttribute("codeMsg", "验证码已失效，请刷新验证码");
+            return "/site/forget";
+        }
+        if(!code.equalsIgnoreCase(verifycode)) {
+            model.addAttribute("codeMsg", "验证码不正确");
+            return "/site/forget";
+        }
+
+        // 验证现在传递过来的邮箱是否和刚刚发送的邮箱一致
+        String emailKey = RedisUtil.getEmailKey(email);
+        String sendEmail = (String) redisTemplate.opsForValue().get(emailKey);
+        if(!email.equalsIgnoreCase(sendEmail)) {
+            model.addAttribute("codeMsg", "邮箱跟原发送的邮箱不匹配");
+            return "/site/forget";
+        }
+
+        userService.updatePassword(email, password);
+
+        // 更新完，手动清除
+        CookieUtil.set(response, cookie, 0);
+        redisTemplate.delete(kaptchaKey);
+        redisTemplate.delete(emailKey);
+
+        return "/site/login";
     }
 }

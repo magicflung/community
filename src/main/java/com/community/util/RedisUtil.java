@@ -16,6 +16,8 @@ public class RedisUtil {
     private static final String PREFIX_FOLLOWER = "follower"; // 关注者（粉丝）
     // 验证码
     private static final String PREFIX_KAPTCHA = "kaptcha";
+    // 忘记密码存储邮箱
+    private static final String PREFIX_EMAIL = "email";
     // 登录凭证
     private static final String PREFIX_TICKET = "ticket";
     // 用户信息
@@ -77,6 +79,16 @@ public class RedisUtil {
      */
     public static String getKaptchaKey(String owner) {
         return PREFIX_KAPTCHA + SPLIT + owner;
+    }
+
+    /**
+     * 忘记密码时携带的邮箱
+     * 后面只是验证验证码是否正确，还得验证传过来的邮箱是否跟刚刚发送的邮箱一样。
+     * @param email 临时存储邮箱
+     * @return 登录验证码key
+     */
+    public static String getEmailKey(String email) {
+        return PREFIX_EMAIL + SPLIT + email;
     }
 
     /**

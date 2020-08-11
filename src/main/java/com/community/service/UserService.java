@@ -68,6 +68,7 @@ public class UserService implements CommunityConstant {
         return user;
     }
 
+
     /**
      * 使用Map可以封装多种情况的返回结果
      *
@@ -171,6 +172,16 @@ public class UserService implements CommunityConstant {
         return rows;
     }
 
+    public int updatePassword(String email, String password) {
+
+        User user = userMapper.selectUserByEmail(email);
+
+        password = CommunityUtil.md5(password + user.getSalt());
+
+        int rows = userMapper.forgetPassword(email, password);
+        return rows;
+    }
+
     /**
      * @param username
      * @return 根据用户名查用户
@@ -246,5 +257,24 @@ public class UserService implements CommunityConstant {
 
         return list;
     }
+
+
+    /**
+     * 忘记密码：发送验证码邮件
+     *
+     * @param email
+     * @return 注册
+     */
+    public void verifycode(String email, String verifycode) {
+        // 发送验证码邮件
+        // 不用管邮箱是否存在
+        Context context = new Context();
+        context.setVariable("email", email);
+        context.setVariable("verifycode", verifycode);
+        String content = templateEngine.process("/mail/forget", context);
+        mailClient.sendMail(email, "忘记密码", content);
+
+    }
+
 
 }

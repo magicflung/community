@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
@@ -38,12 +39,14 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String ticket = CookieUtil.getValue(request, "ticket");
-        if(ticket != null) {
+        Cookie cookie = CookieUtil.getValue(request, "ticket");
+        if (cookie != null) {
+            String ticket = cookie.getValue();
+
             // 查询凭证
             LoginTicket loginTicketByTicket = loginTicketService.findLoginTicketByTicket(ticket);
             // 取出的时间，after（晚于）当前时间
-            if(loginTicketByTicket != null && loginTicketByTicket.getStatus() == 0
+            if (loginTicketByTicket != null && loginTicketByTicket.getStatus() == 0
                     && loginTicketByTicket.getExpired().after(new Date())) {
                 // 查询用户
                 User user = userService.findUserById(loginTicketByTicket.getUserId());
@@ -60,7 +63,9 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 // 认证成功后，认证结果会通过SecurityContextHolder存入SecurityContext中
                 SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
             }
+
         }
+
 
         return true;
     }
@@ -68,7 +73,7 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         User user = hostHolder.getUser();
-        if(user != null && modelAndView != null) {
+        if (user != null && modelAndView != null) {
             modelAndView.addObject("loginUser", user);
         }
     }

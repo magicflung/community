@@ -62,7 +62,7 @@ public class HomeController implements CommunityConstant {
                 map.put("user", user);
 
                 // 查询帖子的赞
-                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_COMMENT, post.getId());
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
                 map.put("likeCount", likeCount);
 
                 discussPosts.add(map);
