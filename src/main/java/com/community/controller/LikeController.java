@@ -83,11 +83,10 @@ public class LikeController implements CommunityConstant {
         }
 
         // 排行榜计算分数
-        if(entityType == ENTITY_TYPE_POST) {
-            // 计算帖子分数
-            String redisKey = RedisUtil.getPostScoreKey();
-            redisTemplate.opsForSet().add(redisKey, postId);
-        }
+        // 只要点赞就计算
+        String redisKey = RedisUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey, postId);
+
 
         return CommunityUtil.getJSONString(200, null, map);
     }

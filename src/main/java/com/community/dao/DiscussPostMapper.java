@@ -45,4 +45,6 @@ public interface DiscussPostMapper {
 
     int updateScore(int id, double score);
 
+
+
 }

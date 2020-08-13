@@ -89,11 +89,12 @@ public class CommentController implements CommunityConstant {
                     .setEntityId(discussPostId);
             eventProducer.fireEvent(event);
 
-            // 排行榜计算分数
-            // 计算帖子分数
-            String redisKey = RedisUtil.getPostScoreKey();
-            redisTemplate.opsForSet().add(redisKey, discussPostId);
+
         }
+        // 排行榜计算分数
+        // 只要评论就计算
+        String redisKey = RedisUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey, discussPostId);
 
         return "redirect:/discuss/detail/" + discussPostId;
     }

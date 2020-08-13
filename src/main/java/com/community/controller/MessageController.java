@@ -167,6 +167,9 @@ public class MessageController implements CommunityConstant {
         if (toUser == null) {
             return CommunityUtil.getJSONString(403, "目标用户不存在");
         }
+        if(toUser.getUsername().equals(hostHolder.getUser().getUsername())) {
+            return CommunityUtil.getJSONString(403, "不能发给自己");
+        }
         // 当前用户的
         User fromUser = hostHolder.getUser();
 

@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="icon" href="https://static.nowcoder.com/images/logo_87_87.png"/>
+	<link rel="icon" th:href="@{/img/icon.png}"/>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
 	<link rel="stylesheet" th:href="@{/css/global.css}" />
 	<title>猿圈-搜索结果</title>
@@ -33,9 +33,9 @@
 								<u class="mr-3" th:utext="${map.user.username}">用户名</u>
 								发布于 <b th:text="${#dates.format(map.post.createTime, 'yyyy-MM-dd HH:mm:ss')}">时间</b>
 								<ul class="d-inline float-right">
-									<li class="d-inline ml-2" th:text="${map.likeCount}">赞 11</li>
+									<li class="d-inline ml-2">赞 <span th:text="${map.likeCount}">11</span></li>
 									<li class="d-inline ml-2">|</li>
-									<li class="d-inline ml-2" th:test="${map.post.commentCount}">回复 7</li>
+									<li class="d-inline ml-2">回复 <span th:text="${map.post.commentCount}">999</span></li>
 								</ul>
 							</div>
 						</div>

@@ -103,7 +103,8 @@ public class DiscussPostService {
      */
     public List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMode) {
 
-        // 添加缓存优化，只是缓存热榜
+        //
+        // 添加缓存优化
         // 缓存条件：userId不传，orderMode=0，然后是第一页。
         // 所以与offset和limit有关
         if(userId == 0 && orderMode == 1) {
